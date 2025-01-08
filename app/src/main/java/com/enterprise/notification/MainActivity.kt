@@ -150,10 +150,10 @@ fun sendNotification(context: Context) {
     }
 
     val builder = NotificationCompat.Builder(context, channelId)
-        .setSmallIcon(R.drawable.baseline_menu_book_24)
         .setContentTitle("Notification App Notification Title")
         .setContentText("Notification App Notification Content Text")
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+        .setSmallIcon(R.drawable.baseline_menu_book_24)
 
     val notificationId: Int = 1
 
