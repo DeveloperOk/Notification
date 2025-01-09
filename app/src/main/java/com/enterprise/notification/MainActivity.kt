@@ -26,13 +26,15 @@ import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
-import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
 
@@ -42,25 +44,11 @@ class MainActivity : ComponentActivity() {
         //Medium post
         //https://medium.com/@anandmali/creating-a-basic-android-notification-5e5ee1614aae
 
-         val objectRegisterForActivityResult = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-                if (isGranted) {
-                    // Permission is granted
-                    // we can proceed to create a notification
-
-                    sendNotification(context = this)
-
-                } else {
-                    // Permission is denied
-                    // We need to show rational dialogue to ask for the permission
-                }
-            }
-
-
         enableEdgeToEdge()
         setContent {
             NotificationTheme {
 
-                NotificationApp(objectRegisterForActivityResult = objectRegisterForActivityResult)
+                NotificationApp()
 
             }
         }
@@ -70,11 +58,25 @@ class MainActivity : ComponentActivity() {
 
 
 @Composable
-fun NotificationApp(
-    objectRegisterForActivityResult: ActivityResultLauncher<String>
-) {
+fun NotificationApp() {
 
     val context = LocalContext.current
+
+    val launcherForActivityResult =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+
+            if (isGranted) {
+                // Permission is granted
+                // we can proceed to create a notification
+
+                sendNotification(context = context)
+
+            } else {
+                // Permission is denied
+                // We need to show rational dialogue to ask for the permission
+            }
+
+    }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
@@ -90,7 +92,7 @@ fun NotificationApp(
                 Button(colors = ButtonDefaults.buttonColors(containerColor = Color.Green),
                     onClick = {
 
-                    requestPermission(context = context, objectRegisterForActivityResult = objectRegisterForActivityResult)
+                    requestPermission(context = context, launcherForActivityResult = launcherForActivityResult)
 
                 }) {
 
@@ -108,7 +110,7 @@ fun NotificationApp(
 
 fun requestPermission(
     context: Context,
-    objectRegisterForActivityResult: ActivityResultLauncher<String>
+    launcherForActivityResult: ManagedActivityResultLauncher<String, Boolean>
 ) {
     if (
         ContextCompat.checkSelfPermission(
@@ -125,8 +127,7 @@ fun requestPermission(
         // Permission is not granted yet
         // Request for the permission to post notifications
 
-        objectRegisterForActivityResult.launch(Manifest.permission.POST_NOTIFICATIONS)
-
+        launcherForActivityResult.launch(Manifest.permission.POST_NOTIFICATIONS)
 
 
     }
@@ -155,7 +156,7 @@ fun sendNotification(context: Context) {
         .setPriority(NotificationCompat.PRIORITY_DEFAULT)
         .setSmallIcon(R.drawable.baseline_menu_book_24)
 
-    val notificationId: Int = 1
+    val notificationId: Int = Random.nextInt(Int.MIN_VALUE, Int.MAX_VALUE)
 
     with(NotificationManagerCompat.from(context)) {
 
